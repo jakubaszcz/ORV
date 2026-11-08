@@ -1,6 +1,7 @@
 package com.onticentity.orv_reader
 
 import android.os.Bundle
+import com.onticentity.orv_reader.ui.theme.ORVReaderTheme
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
@@ -19,7 +20,9 @@ class MainActivity : ComponentActivity() {
         controller.hide(WindowInsetsCompat.Type.systemBars())
 
         setContent {
-            ReaderApp()
+            ORVReaderTheme {
+                ReaderApp()
+            }
         }
     }
 }

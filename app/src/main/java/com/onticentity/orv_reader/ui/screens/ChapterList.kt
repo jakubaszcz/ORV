@@ -1,56 +1,132 @@
 package com.onticentity.orv_reader.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.onticentity.orv_reader.ui.theme.ORVReaderTheme
+
+private fun chapterNumber(file: String): String =
+    file.removePrefix("ch_").removeSuffix(".json")
 
 @Composable
-fun ChapterList(files: List<String>, onSelect: (String) -> Unit) {
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+fun ChapterList(
+    files: List<String>,
+    onSelect: (String) -> Unit,
+    savedChapter: String? = null,
+    onResume: () -> Unit = {}
+) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
+        contentColor = MaterialTheme.colorScheme.onSurface
     ) {
-        item {
-            Text("${files.size} Chapters", fontSize = 22.sp)
-        }
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item(key = "header") {
+                Column(
+                    modifier = Modifier.padding(bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text("ORV Reader", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
+                    Text("${files.size} chapters", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                }
+            }
 
-        if (files.isEmpty()) {
-            item { Text("No chapters found.") }
-        }
+            if (savedChapter != null && savedChapter in files) {
+                item(key = "resume") {
+                    Surface(
+                        onClick = onResume,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(20.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Text(
+                                    "CONTINUE READING",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp,
+                                    letterSpacing = 1.sp
+                                )
+                                Text(
+                                    "Chapter ${chapterNumber(savedChapter)}",
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text("Resume saved progress", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                            }
+                            Text("\u2192", fontSize = 24.sp, modifier = Modifier.padding(start = 12.dp))
+                        }
+                    }
+                }
+            }
 
-        items(files, key = { it }) { file ->
-            val chapter = file
-                .removePrefix("ch_")
-                .removeSuffix(".json")
-                .toIntOrNull()
+            item(key = "chapters-title") {
+                Text(
+                    "Chapters",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp)
-                    .background(Color(0xFF202020))
-                    .clickable(onClickLabel = "Open chapter") { onSelect(file) }
-                    .padding(16.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Text("Chapter ${chapter ?: "?"}", fontSize = 18.sp)
+            if (files.isEmpty()) {
+                item(key = "empty") { Text("No chapters found.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            }
+
+            items(files, key = { it }) { file ->
+                Surface(
+                    onClick = { onSelect(file) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ) {
+                    Row(
+                        modifier = Modifier.heightIn(min = 64.dp).padding(18.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Chapter ${chapterNumber(file)}", fontSize = 16.sp, modifier = Modifier.weight(1f))
+                        Text("\u203A", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 24.sp)
+                    }
+                }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun ChapterListPreview() {
+    ORVReaderTheme {
+        ChapterList(
+            files = (1..551).map { "ch_$it.json" },
+            savedChapter = "ch_10.json",
+            onSelect = {},
+            onResume = {}
+        )
     }
 }

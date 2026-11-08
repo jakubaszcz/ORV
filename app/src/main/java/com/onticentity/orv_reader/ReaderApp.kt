@@ -1,22 +1,16 @@
 package com.onticentity.orv_reader
 
-import androidx.compose.material3.Button
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.onticentity.orv_reader.data.listChapterFiles
 import com.onticentity.orv_reader.ui.screens.ChapterList
 import com.onticentity.orv_reader.ui.screens.ChapterScreen
+import com.onticentity.orv_reader.data.ReadingProgress
 import com.onticentity.orv_reader.data.loadChapter
 import com.onticentity.orv_reader.data.saveChapter
 import kotlinx.coroutines.CancellationException
@@ -48,41 +42,39 @@ fun ReaderApp() {
         selectedChapter = null
     }
 
+    var savedProgress by remember { mutableStateOf<ReadingProgress?>(null) }
+
+    LaunchedEffect(selectedChapter) {
+        if (selectedChapter == null) {
+            try {
+                savedProgress = loadChapter(context)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Toast.makeText(context, "Unable to load saved progress", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     val file = selectedChapter
 
     if (file == null) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = Color(0xFF0A0908),
-            contentColor = Color(0xFFF2F2F2)
-        ) {
-            Column {
-                Button(
-                    onClick = {
-                        scope.launch {
-                            val progress = loadChapter(context)
-
-                            if (progress != null && progress.chapterFile in files) {
-                                targetParagraphId = progress.paragraphId
-                                startAtEnd = false
-                                selectedChapter = progress.chapterFile
-                            }
-                        }
-                    }
-                ) {
-                    Text("Resume reading")
+        ChapterList(
+            files = files,
+            savedChapter = savedProgress?.chapterFile,
+            onResume = {
+                savedProgress?.takeIf { it.chapterFile in files }?.let { progress ->
+                    targetParagraphId = progress.paragraphId
+                    startAtEnd = false
+                    selectedChapter = progress.chapterFile
                 }
-
-                ChapterList(
-                    files = files,
-                    onSelect = {
-                        targetParagraphId = null
-                        startAtEnd = false
-                        selectedChapter = it
-                    }
-                )
+            },
+            onSelect = {
+                targetParagraphId = null
+                startAtEnd = false
+                selectedChapter = it
             }
-        }
+        )
     } else {
 
         val index = files.indexOf(file)

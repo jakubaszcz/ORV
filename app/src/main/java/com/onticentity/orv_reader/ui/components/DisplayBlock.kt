@@ -1,51 +1,64 @@
 package com.onticentity.orv_reader.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.json.JSONObject
 
 @Composable
 fun DisplayBlock(block: JSONObject, onSaveProgress: (String) -> Unit) {
     when (block.getString("type")) {
         "paragraph" -> {
-            Box(modifier = Modifier.padding(4.dp).combinedClickable(
-                onClick = {},
-                onDoubleClick = { onSaveProgress(block.getString("id")) }
-            )) {
-                Text(
-                    text = block.getString("text"),
-                    fontSize = 14.sp
-                )
-            }
+            Text(
+                text = block.getString("text"),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .combinedClickable(
+                        onClick = {},
+                        onDoubleClick = { onSaveProgress(block.getString("id")) }
+                    )
+            )
         }
 
         "heading" -> {
             val level = block.optInt("level", 2)
 
-            Box(modifier = Modifier.padding(4.dp)) {
-                Text(
-                    text = block.getString("text"),
-                    fontSize = when (level) {
-                        1 -> 28.sp
-                        2 -> 24.sp
-                        3 -> 20.sp
-                        else -> 18.sp
-                    }
-                )
-            }
+            Text(
+                text = block.getString("text"),
+                style = when (level) {
+                    1 -> MaterialTheme.typography.headlineLarge
+                    2 -> MaterialTheme.typography.headlineMedium
+                    else -> MaterialTheme.typography.titleLarge
+                },
+                modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
+            )
         }
 
         "box" -> {
             val children = block.getJSONArray("blocks")
 
-            Column {
-                for (index in 0 until children.length()) {
-                    DisplayBlock(children.getJSONObject(index), onSaveProgress)
+            Surface(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    for (index in 0 until children.length()) {
+                        DisplayBlock(children.getJSONObject(index), onSaveProgress)
+                    }
                 }
             }
         }
