@@ -23,6 +23,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -35,10 +36,21 @@ import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.math.abs
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import kotlin.time.Duration.Companion.milliseconds
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+
+        controller.hide(WindowInsetsCompat.Type.systemBars())
 
         setContent {
             ReaderApp()
@@ -62,6 +74,8 @@ fun ReaderApp() {
             }
     }
 
+    var chapters: Int = files.size;
+
     var selectedChapter by rememberSaveable {
         mutableStateOf<String?>(null)
     }
@@ -77,10 +91,13 @@ fun ReaderApp() {
     var file = selectedChapter
 
     if (file == null) {
-        ChapterList(onSelect = {
-            startAtEnd = false
-            selectedChapter = it
-        })
+        ChapterList(
+            onSelect = {
+                startAtEnd = false
+                selectedChapter = it
+            },
+            chapters = chapters
+        )
     } else {
 
         val index = files.indexOf(file)
@@ -111,7 +128,7 @@ fun ReaderApp() {
 }
 
 @Composable
-fun ChapterList(onSelect: (String) -> Unit) {
+fun ChapterList(chapters: Int, onSelect: (String) -> Unit) {
     val context = LocalContext.current
 
     val files = remember(context) {
@@ -130,11 +147,16 @@ fun ChapterList(onSelect: (String) -> Unit) {
             item { Text("No chapters found.") }
         }
 
+        item {
+            Text("$chapters Chapters")
+        }
+
         items(files) { file ->
             val chapter = file
                 .removePrefix("ch_")
                 .removeSuffix(".json")
                 .toIntOrNull()
+
 
             Button(onClick = { onSelect(file) }) {
                 Text("Chapter ${chapter ?: "?"}")
@@ -187,7 +209,7 @@ fun ChapterScreen(
         onBack = onBack
     )
 
-    Column(Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 16.dp)) {
 
         if (message.isNotEmpty()) {
             Text(message)
@@ -211,7 +233,9 @@ fun ChapterScreen(
 fun DisplayBlock(block: JSONObject) {
     when (block.getString("type")) {
         "paragraph", "heading" -> {
-            Text(block.getString("text"))
+            Box(modifier = Modifier.padding(4.dp)) {
+                Text(block.getString("text"))
+            }
         }
 
         "box" -> {
@@ -300,7 +324,7 @@ fun chapterGestures(
                     val goNext = next
 
                     changeJob = scope.launch {
-                        delay(1_000L)
+                        delay(250L.milliseconds)
 
                         val stillAtEdge = if (goNext) {
                             !listState.canScrollForward
