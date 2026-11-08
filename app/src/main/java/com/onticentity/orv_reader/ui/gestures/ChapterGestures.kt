@@ -94,7 +94,7 @@ fun chapterGestures(
                     val goNext = next
 
                     changeJob = scope.launch {
-                        delay(250L.milliseconds)
+                        delay(100L.milliseconds)
 
                         val stillAtEdge = if (goNext) {
                             !listState.canScrollForward
