@@ -4,9 +4,13 @@ import androidx.compose.material3.Button
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -47,31 +51,37 @@ fun ReaderApp() {
     val file = selectedChapter
 
     if (file == null) {
-        Column {
-            Button(
-                onClick = {
-                    scope.launch {
-                        val progress = loadChapter(context)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = Color(0xFF0A0908),
+            contentColor = Color(0xFFF2F2F2)
+        ) {
+            Column {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            val progress = loadChapter(context)
 
-                        if (progress != null && progress.chapterFile in files) {
-                            targetParagraphId = progress.paragraphId
-                            startAtEnd = false
-                            selectedChapter = progress.chapterFile
+                            if (progress != null && progress.chapterFile in files) {
+                                targetParagraphId = progress.paragraphId
+                                startAtEnd = false
+                                selectedChapter = progress.chapterFile
+                            }
                         }
                     }
+                ) {
+                    Text("Resume reading")
                 }
-            ) {
-                Text("Resume reading")
-            }
 
-            ChapterList(
-                files = files,
-                onSelect = {
-                    targetParagraphId = null
-                    startAtEnd = false
-                    selectedChapter = it
-                }
-            )
+                ChapterList(
+                    files = files,
+                    onSelect = {
+                        targetParagraphId = null
+                        startAtEnd = false
+                        selectedChapter = it
+                    }
+                )
+            }
         }
     } else {
 

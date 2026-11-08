@@ -22,40 +22,34 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun ChapterList(files: List<String>, onSelect: (String) -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = Color(0xFF0A0908),
-        contentColor = Color(0xFFF2F2F2)
+    LazyColumn(
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        LazyColumn(
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item {
-                Text("${files.size} Chapters", fontSize = 22.sp)
-            }
+        item {
+            Text("${files.size} Chapters", fontSize = 22.sp)
+        }
 
-            if (files.isEmpty()) {
-                item { Text("No chapters found.") }
-            }
+        if (files.isEmpty()) {
+            item { Text("No chapters found.") }
+        }
 
-            items(files, key = { it }) { file ->
-                val chapter = file
-                    .removePrefix("ch_")
-                    .removeSuffix(".json")
-                    .toIntOrNull()
+        items(files, key = { it }) { file ->
+            val chapter = file
+                .removePrefix("ch_")
+                .removeSuffix(".json")
+                .toIntOrNull()
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp)
-                        .background(Color(0xFF202020))
-                        .clickable(onClickLabel = "Open chapter") { onSelect(file) }
-                        .padding(16.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Text("Chapter ${chapter ?: "?"}", fontSize = 18.sp)
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 56.dp)
+                    .background(Color(0xFF202020))
+                    .clickable(onClickLabel = "Open chapter") { onSelect(file) }
+                    .padding(16.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Text("Chapter ${chapter ?: "?"}", fontSize = 18.sp)
             }
         }
     }
