@@ -7,6 +7,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import com.onticentity.orv_reader.ui.gestures.ChapterPullState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
@@ -73,8 +79,11 @@ fun ChapterScreen(
         }?.optString("text").orEmpty()
     }
 
+    val pull = remember(file) { ChapterPullState() }
+    val pullOffset by animateFloatAsState(pull.distance, spring(stiffness = 700f), label = "chapterPull")
     val gestures = chapterGestures(
         listState = listState,
+        feedback = pull,
         canGoNext = canGoNext && blocks.isNotEmpty(),
         canGoPrevious = canGoPrevious && blocks.isNotEmpty(),
         onNext = onNext,
@@ -118,18 +127,48 @@ fun ChapterScreen(
                 )
             }
     
-            LazyColumn(
-                state = listState,
-                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier
-                    .weight(1f)
-                    .widthIn(max = 680.dp)
-                    .fillMaxWidth()
-                    .then(gestures)
+            Box(
+                Modifier.weight(1f).widthIn(max = 680.dp).fillMaxWidth().clipToBounds()
             ) {
-                items(blocks, key = { it.getString("id") }) { block ->
-                    DisplayBlock(block, onSaveProgress = onSaveProgress)
+                LazyColumn(
+                    state = listState,
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxSize()
+                        .graphicsLayer { translationY = pullOffset }
+                        .then(gestures)
+                ) {
+                    items(blocks, key = { it.getString("id") }) { block ->
+                        DisplayBlock(block, onSaveProgress = onSaveProgress)
+                    }
+                }
+                if (pull.distance != 0f) {
+                    val previous = pull.distance > 0f
+                    Column(
+                        modifier = Modifier
+                            .align(if (previous) Alignment.TopCenter else Alignment.BottomCenter)
+                            .padding(vertical = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        if (previous && pull.counting) {
+                            Text("Previous chapter",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        CircularProgressIndicator(
+                            progress = { pull.progress },
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            trackColor = MaterialTheme.colorScheme.outlineVariant
+                        )
+                        if (!previous && pull.counting) {
+                            Text("Next chapter",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
             }
             Box(Modifier.widthIn(max = 680.dp).fillMaxWidth()) {

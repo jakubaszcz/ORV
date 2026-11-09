@@ -15,14 +15,23 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
-import kotlin.time.Duration.Companion.milliseconds
+
+@Stable
+class ChapterPullState {
+    var distance by mutableFloatStateOf(0f)
+        internal set
+    var progress by mutableFloatStateOf(0f)
+        internal set
+    var counting by mutableStateOf(false)
+        internal set
+}
 
 @Composable
 fun chapterGestures(
     listState: LazyListState,
+    feedback: ChapterPullState,
     canGoNext: Boolean,
     canGoPrevious: Boolean,
     onNext: () -> Unit,
@@ -30,7 +39,7 @@ fun chapterGestures(
     onBack: () -> Unit
 ): Modifier {
     val scope = rememberCoroutineScope()
-    val threshold = with(LocalDensity.current) { 80.dp.toPx() }
+    val threshold = with(LocalDensity.current) { 64.dp.toPx() }
 
     val latestNext by rememberUpdatedState(onNext)
     val latestPrevious by rememberUpdatedState(onPrevious)
@@ -44,10 +53,14 @@ fun chapterGestures(
         changeJob?.cancel()
         changeJob = null
         pullDistance = 0f
+        feedback.distance = 0f
+        feedback.progress = 0f
+        feedback.counting = false
     }
 
     val connection = remember(
         listState,
+        feedback,
         threshold,
         canGoNext,
         canGoPrevious
@@ -88,13 +101,19 @@ fun chapterGestures(
                     return Offset.Zero
                 }
 
-                pullDistance += available.y
+                pullDistance = (pullDistance + available.y).coerceIn(-threshold * 2, threshold * 2)
+                feedback.distance = (pullDistance * 0.6f).coerceIn(-threshold, threshold)
 
                 if (abs(pullDistance) >= threshold && changeJob == null) {
                     val goNext = next
 
                     changeJob = scope.launch {
-                        delay(100L.milliseconds)
+                        feedback.counting = true
+                        val started = withFrameNanos { it }
+                        while (feedback.progress < 1f) {
+                            val now = withFrameNanos { it }
+                            feedback.progress = ((now - started) / 700_000_000f).coerceIn(0f, 1f)
+                        }
 
                         val stillAtEdge = if (goNext) {
                             !listState.canScrollForward
@@ -107,6 +126,9 @@ fun chapterGestures(
                             touching = false
                             pullDistance = 0f
                             changeJob = null
+                            feedback.distance = 0f
+                            feedback.progress = 0f
+                            feedback.counting = false
 
                             if (goNext) {
                                 latestNext()
