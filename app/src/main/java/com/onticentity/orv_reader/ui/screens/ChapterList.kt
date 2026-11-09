@@ -56,6 +56,9 @@ fun ChapterList(
 ) {
     val listState = rememberLazyListState()
     val background = MaterialTheme.colorScheme.background
+    val cardShape = RoundedCornerShape(8.dp)
+    val cardColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+    val cardBorder = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
     val orderedFiles = remember(files) { files.sortedBy(::chapterFileOrder) }
 
     val groupedFiles = remember(episodes) { episodes.flatMap { it.files }.toSet() }
@@ -120,37 +123,27 @@ fun ChapterList(
                 item(key = "resume") {
                     Surface(
                         onClick = onResume,
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        shape = cardShape,
+                        color = cardColor,
                         contentColor = MaterialTheme.colorScheme.onSurface,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                        border = cardBorder
                     ) {
                         Row(
-                            modifier = Modifier.padding(20.dp),
+                            modifier = Modifier.heightIn(min = 64.dp)
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-
-
-
-                                Text(
-                                    "CONTINUE READING",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp,
-                                    letterSpacing = 1.sp
-                                )
-                                Text(
-                                    chapterLabel(savedChapter),
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text("Resume saved progress", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                            Column(modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                Text("Continue reading", fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(chapterLabel(savedChapter), fontSize = 15.sp,
+                                    fontWeight = FontWeight.Medium)
                             }
-                            Text("\u2192", fontSize = 24.sp, modifier = Modifier.padding(start = 12.dp))
+                            Text("›", fontSize = 20.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 12.dp))
                         }
                     }
                 }
@@ -159,9 +152,10 @@ fun ChapterList(
             item(key = "chapters-title") {
                 Text(
                     "Chapters and episodes",
-                    fontSize = 20.sp,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(top = 4.dp, bottom = 6.dp)
                 )
             }
 
@@ -171,8 +165,10 @@ fun ChapterList(
 
             items(standaloneFiles, key = { it }) { file ->
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f)
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = cardShape,
+                    color = cardColor,
+                    border = cardBorder
                 ) {
                     ChapterRow(file, savedChapter == file, onSelect)
                 }
@@ -186,10 +182,10 @@ fun ChapterList(
                 }
                 val expanded = expansionOverride ?: (savedChapter in episode.files)
                 Surface(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = cardShape,
+                    color = cardColor,
+                    border = cardBorder
                 ) {
                     Column(modifier = Modifier.animateContentSize()) {
                         Row(
@@ -201,26 +197,27 @@ fun ChapterList(
                                     onClickLabel = if (expanded) "Collapse chapters" else "Expand chapters",
                                     onClick = { expansionOverride = !expanded }
                                 )
-                                .padding(18.dp),
+                                .heightIn(min = 64.dp)
+                                .padding(horizontal = 14.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(
                                 modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                                verticalArrangement = Arrangement.spacedBy(3.dp)
                             ) {
-                                Text(episode.label, color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                                Text(episode.title, fontSize = 20.sp, fontWeight = FontWeight.Medium)
-                                Text("${episode.files.size} chapters", fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("${episode.label} · ${episode.files.size} chapters",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp)
+                                Text(episode.title, fontSize = 15.sp, lineHeight = 21.sp,
+                                    fontWeight = FontWeight.Medium)
                             }
-                            Text(if (expanded) "−" else "+", fontSize = 24.sp,
+                            Text(if (expanded) "−" else "+", fontSize = 18.sp,
                                 modifier = Modifier.padding(start = 16.dp),
                                 color = MaterialTheme.colorScheme.primary)
                         }
                         if (expanded) {
                             episode.files.forEach { file ->
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                HorizontalDivider(modifier = Modifier.padding(horizontal = 14.dp),
+                                    thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant)
                                 ChapterRow(file, savedChapter == file, onSelect)
                             }
                         }
@@ -237,18 +234,18 @@ private fun ChapterRow(file: String, saved: Boolean, onSelect: (String) -> Unit)
     Surface(
         onClick = { onSelect(file) },
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f)
+        color = Color.Transparent
     ) {
         Row(
-            modifier = Modifier.heightIn(min = 56.dp).padding(18.dp),
+            modifier = Modifier.heightIn(min = 48.dp).padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(chapterLabel(file), fontSize = 16.sp)
-                if (saved) Text("CONTINUE READING", fontSize = 12.sp,
+                Text(chapterLabel(file), fontSize = 14.sp)
+                if (saved) Text("Saved position", fontSize = 10.sp,
                     color = MaterialTheme.colorScheme.primary)
             }
-            Text("›", fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("›", fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
