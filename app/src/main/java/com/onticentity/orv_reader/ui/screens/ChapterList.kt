@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -16,9 +17,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.onticentity.orv_reader.ui.theme.ORVReaderTheme
+import com.onticentity.orv_reader.data.chapterFileOrder
 
-private fun chapterNumber(file: String): String =
-    file.removePrefix("ch_").removeSuffix(".json")
+private fun chapterLabel(file: String): String =
+    if (file == "prologue.json") "Prologue"
+    else "Chapitre ${file.removePrefix("ch_").removeSuffix(".json")}"
 
 @Composable
 fun ChapterList(
@@ -27,6 +30,8 @@ fun ChapterList(
     savedChapter: String? = null,
     onResume: () -> Unit = {}
 ) {
+    val orderedFiles = remember(files) { files.sortedBy(::chapterFileOrder) }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
@@ -65,6 +70,9 @@ fun ChapterList(
                                 modifier = Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
+
+
+
                                 Text(
                                     "CONTINUE READING",
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -72,7 +80,7 @@ fun ChapterList(
                                     letterSpacing = 1.sp
                                 )
                                 Text(
-                                    "Chapter ${chapterNumber(savedChapter)}",
+                                    chapterLabel(savedChapter),
                                     fontSize = 22.sp,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -97,7 +105,7 @@ fun ChapterList(
                 item(key = "empty") { Text("No chapters found.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
 
-            items(files, key = { it }) { file ->
+            items(orderedFiles, key = { it }) { file ->
                 Surface(
                     onClick = { onSelect(file) },
                     modifier = Modifier.fillMaxWidth(),
@@ -109,7 +117,8 @@ fun ChapterList(
                         modifier = Modifier.heightIn(min = 64.dp).padding(18.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Chapter ${chapterNumber(file)}", fontSize = 16.sp, modifier = Modifier.weight(1f))
+
+                        Text(chapterLabel(file), fontSize = 16.sp, modifier = Modifier.weight(1f))
                         Text("\u203A", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 24.sp)
                     }
                 }
@@ -123,7 +132,8 @@ fun ChapterList(
 private fun ChapterListPreview() {
     ORVReaderTheme {
         ChapterList(
-            files = (1..551).map { "ch_$it.json" },
+            files = listOf("prologue.json") +
+                    (1..550).map { "ch_$it.json" },
             savedChapter = "ch_10.json",
             onSelect = {},
             onResume = {}
