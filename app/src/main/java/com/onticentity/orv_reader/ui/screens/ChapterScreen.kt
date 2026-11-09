@@ -66,9 +66,9 @@ fun ChapterScreen(
     }
 
     val headerTitle = remember(file, blocks) {
-        val title = blocks.firstOrNull { it.optString("type") == "heading" }
-            ?.optString("text").orEmpty()
-        formatChapterHeader(file, title)
+        blocks.firstOrNull {
+            it.optString("type") == "heading"
+        }?.optString("text").orEmpty()
     }
 
     val gestures = chapterGestures(
@@ -98,7 +98,7 @@ fun ChapterScreen(
                     modifier = Modifier.padding(
                         start = 20.dp,
                         end = 20.dp,
-                        top = 25.dp,
+                        top = 35.dp,
                         bottom = 8.dp
                     )
                 )
@@ -119,6 +119,9 @@ fun ChapterScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
+                    .padding(
+                        bottom = 20.dp
+                    )
                     .then(gestures)
             ) {
                 items(blocks, key = { it.getString("id") }) { block ->
@@ -127,29 +130,4 @@ fun ChapterScreen(
             }
         }
     }
-}
-
-
-private fun formatChapterHeader(file: String, originalTitle: String): String {
-    val chapter = file.removePrefix("ch_").removeSuffix(".json")
-    var title = originalTitle
-        .replace(Regex("""^Ch\s+\d+\s*:\s*""", RegexOption.IGNORE_CASE), "")
-        .replace(Regex("""^Ep\.\s*\d+\s*[-\u2013\u2014]\s*""", RegexOption.IGNORE_CASE), "")
-        .trim()
-
-    val part = Regex(""",\s*([IVXLCDM]+)\s*$""").find(title)
-    if (part != null) {
-        val values = mapOf('I' to 1, 'V' to 5, 'X' to 10, 'L' to 50,
-            'C' to 100, 'D' to 500, 'M' to 1000)
-        var number = 0
-        var previous = 0
-        for (character in part.groupValues[1].reversed()) {
-            val value = values.getValue(character)
-            number += if (value < previous) -value else value
-            previous = maxOf(previous, value)
-        }
-        title = title.substring(0, part.range.first).trimEnd() + " ($number)"
-    }
-
-    return if (title.isBlank()) "Chapitre $chapter" else "Chapitre $chapter - $title"
 }
