@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import java.util.Date
 
@@ -55,12 +56,12 @@ fun ReadingFooter() {
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(time, style = MaterialTheme.typography.labelSmall,
+        Text(time, style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.semantics { contentDescription = "Current time: $time" })
         val batteryText = battery?.let { "$it%" } ?: "—"
         Text("${if (charging) "Charging" else "Battery"} $batteryText",
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

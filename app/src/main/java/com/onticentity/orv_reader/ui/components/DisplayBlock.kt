@@ -22,8 +22,8 @@ fun DisplayBlock(block: JSONObject, onSaveProgress: (String) -> Unit, inWindow: 
                 text = block.getString("text"),
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontFamily = if (inWindow) MaterialTheme.typography.bodyLarge.fontFamily else Charter,
-                    fontSize = 18.sp,
-                    lineHeight = 29.sp,
+                    fontSize = if (inWindow) 16.sp else 18.sp,
+                    lineHeight = if (inWindow) 25.sp else 29.sp,
                     letterSpacing = 0.sp
                 ),
                 modifier = Modifier
@@ -40,12 +40,12 @@ fun DisplayBlock(block: JSONObject, onSaveProgress: (String) -> Unit, inWindow: 
 
             Text(
                 text = block.getString("text"),
-                style = when (level) {
+                style = if (inWindow) MaterialTheme.typography.titleMedium else when (level) {
                     1 -> MaterialTheme.typography.headlineLarge
                     2 -> MaterialTheme.typography.headlineMedium
                     else -> MaterialTheme.typography.titleLarge
                 },
-                modifier = Modifier.padding(top = 8.dp, bottom = 12.dp)
+                modifier = Modifier.padding(top = 4.dp, bottom = if (inWindow) 4.dp else 12.dp)
             )
         }
 
@@ -54,10 +54,10 @@ fun DisplayBlock(block: JSONObject, onSaveProgress: (String) -> Unit, inWindow: 
 
             Surface(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(6.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 contentColor = MaterialTheme.colorScheme.onSurface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),

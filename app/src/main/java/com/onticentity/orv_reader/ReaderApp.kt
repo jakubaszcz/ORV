@@ -86,6 +86,7 @@ fun ReaderApp() {
         key(file) {
             ChapterScreen(
                 file = file,
+                episodeLabel = episodes.firstOrNull { file in it.files }?.label,
                 targetParagraphId = targetParagraphId,
                 startAtEnd = startAtEnd,
                 canGoNext = index >= 0 && index < files.lastIndex,

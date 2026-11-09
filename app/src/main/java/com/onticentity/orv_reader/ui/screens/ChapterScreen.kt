@@ -7,6 +7,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
+import com.onticentity.orv_reader.ui.theme.Charter
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
@@ -18,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.text.style.TextOverflow
 import com.onticentity.orv_reader.data.readChapterBlocks
 import com.onticentity.orv_reader.ui.components.DisplayBlock
 import com.onticentity.orv_reader.ui.components.ReadingFooter
@@ -38,7 +43,8 @@ fun ChapterScreen(
     onSaveProgress: (String) -> Unit,
     onBack: () -> Unit,
     onNext: () -> Unit,
-    onPrevious: () -> Unit
+    onPrevious: () -> Unit,
+    episodeLabel: String? = null
 ) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
@@ -79,6 +85,10 @@ fun ChapterScreen(
         }?.optString("text").orEmpty()
     }
 
+    val chapterLabel = if (file == "prologue.json") "Prologue"
+        else "Chapter ${file.removePrefix("ch_").removeSuffix(".json")}"
+    val chapterTitle = headerTitle.substringAfter(":", headerTitle).trim()
+
     val pull = remember(file) { ChapterPullState() }
     val pullOffset by animateFloatAsState(pull.distance, spring(stiffness = 700f), label = "chapterPull")
     val gestures = chapterGestures(
@@ -94,7 +104,7 @@ fun ChapterScreen(
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.onBackground
+        contentColor = Color(0xFFE5E1DA)
     ) {
         Column(
             modifier = Modifier.fillMaxSize().displayCutoutPadding().navigationBarsPadding(),
@@ -106,16 +116,10 @@ fun ChapterScreen(
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
             ) {
                 Text(
-                    text = headerTitle,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
+                    text = if (file == "prologue.json" || episodeLabel == null) chapterLabel
+                        else "$episodeLabel · $chapterLabel",
                     style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(
-                        start = 24.dp,
-                        end = 24.dp,
-                        top = 12.dp,
-                        bottom = 8.dp
-                    )
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 26.dp, vertical = 12.dp)
                 )
             }
     
@@ -132,14 +136,28 @@ fun ChapterScreen(
             ) {
                 LazyColumn(
                     state = listState,
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                    contentPadding = PaddingValues(horizontal = 26.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxSize()
                         .graphicsLayer { translationY = pullOffset }
                         .then(gestures)
                 ) {
                     items(blocks, key = { it.getString("id") }) { block ->
-                        DisplayBlock(block, onSaveProgress = onSaveProgress)
+                        if (block === blocks.firstOrNull() && block.optString("type") == "heading") {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(top = 18.dp, bottom = 20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Text(chapterTitle, fontFamily = Charter, fontSize = 29.sp,
+                                    lineHeight = 36.sp, fontWeight = FontWeight.Normal,
+                                    textAlign = TextAlign.Center)
+                                HorizontalDivider(Modifier.width(32.dp), thickness = 1.dp,
+                                    color = MaterialTheme.colorScheme.outline)
+                            }
+                        } else {
+                            DisplayBlock(block, onSaveProgress = onSaveProgress)
+                        }
                     }
                 }
                 if (pull.distance != 0f) {
