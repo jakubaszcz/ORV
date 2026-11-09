@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.json.JSONObject
 
 @Composable
@@ -18,7 +19,11 @@ fun DisplayBlock(block: JSONObject, onSaveProgress: (String) -> Unit) {
         "paragraph" -> {
             Text(
                 text = block.getString("text"),
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 18.sp,
+                    lineHeight = 29.sp,
+                    letterSpacing = 0.sp
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .combinedClickable(

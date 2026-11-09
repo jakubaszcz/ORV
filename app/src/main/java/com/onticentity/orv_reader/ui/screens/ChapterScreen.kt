@@ -9,11 +9,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
 import com.onticentity.orv_reader.data.readChapterBlocks
 import com.onticentity.orv_reader.ui.components.DisplayBlock
+import com.onticentity.orv_reader.ui.components.ReadingFooter
 import com.onticentity.orv_reader.ui.gestures.chapterGestures
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -85,9 +87,13 @@ fun ChapterScreen(
         color = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize().displayCutoutPadding().navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.widthIn(max = 680.dp).fillMaxWidth(),
+                color = MaterialTheme.colorScheme.background,
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
             ) {
                 Text(
@@ -96,9 +102,9 @@ fun ChapterScreen(
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(
-                        start = 20.dp,
-                        end = 20.dp,
-                        top = 35.dp,
+                        start = 24.dp,
+                        end = 24.dp,
+                        top = 12.dp,
                         bottom = 8.dp
                     )
                 )
@@ -114,19 +120,20 @@ fun ChapterScreen(
     
             LazyColumn(
                 state = listState,
-                contentPadding = PaddingValues(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier
                     .weight(1f)
+                    .widthIn(max = 680.dp)
                     .fillMaxWidth()
-                    .padding(
-                        bottom = 20.dp
-                    )
                     .then(gestures)
             ) {
                 items(blocks, key = { it.getString("id") }) { block ->
                     DisplayBlock(block, onSaveProgress = onSaveProgress)
                 }
+            }
+            Box(Modifier.widthIn(max = 680.dp).fillMaxWidth()) {
+                ReadingFooter()
             }
         }
     }
