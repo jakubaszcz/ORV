@@ -1,11 +1,23 @@
 package com.onticentity.orv_reader.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.onticentity.orv_reader.R
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +54,8 @@ fun ChapterList(
     onResume: () -> Unit = {},
     episodes: List<EpisodeGroup> = emptyList()
 ) {
+    val listState = rememberLazyListState()
+    val background = MaterialTheme.colorScheme.background
     val orderedFiles = remember(files) { files.sortedBy(::chapterFileOrder) }
 
     val groupedFiles = remember(episodes) { episodes.flatMap { it.files }.toSet() }
@@ -52,17 +66,52 @@ fun ChapterList(
         color = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
+        Box(Modifier.fillMaxSize()) {
+            // Anchored to the first list item: moves away at the same speed as the content.
+            if (listState.firstVisibleItemIndex == 0) {
+                Box(Modifier.fillMaxWidth().height(480.dp).offset {
+                    IntOffset(0, -listState.firstVisibleItemScrollOffset)
+                }) {
+                    Image(
+                        painter = painterResource(R.drawable.reader_portrait),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        alignment = Alignment.TopCenter,
+                        modifier = Modifier.matchParentSize()
+                    )
+                    Box(Modifier.matchParentSize().background(Brush.verticalGradient(
+                        0f to background.copy(alpha = 0f),
+                        0.25f to background.copy(alpha = 0f),
+                        0.55f to background.copy(alpha = 0.45f),
+                        0.82f to background.copy(alpha = 0.92f),
+                        1f to background
+                    )))
+                    Image(
+                        painter = painterResource(R.drawable.orv_korean_logo),
+                        contentDescription = "Omniscient Reader’s Viewpoint",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.align(Alignment.TopEnd)
+                            .padding(top = 24.dp, end = 8.dp)
+                            .size(132.dp)
+                            .graphicsLayer { blendMode = BlendMode.Screen }
+                    )
+                }
+            }
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item(key = "header") {
                 Column(
-                    modifier = Modifier.padding(bottom = 24.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 310.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text("ORV Reader", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
+                    Text("Omniscient Reader’s\nViewpoint",
+                        fontFamily = FontFamily.Serif,
+                        fontSize = 32.sp, lineHeight = 35.sp,
+                        fontWeight = FontWeight.Medium)
                     Text("${files.count { it != "prologue.json" }} chapters · ${episodes.count { it.kind == "episode" }} episodes", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                 }
             }
@@ -73,7 +122,7 @@ fun ChapterList(
                         onClick = onResume,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
                         shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f),
                         contentColor = MaterialTheme.colorScheme.onSurface,
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                     ) {
@@ -123,7 +172,7 @@ fun ChapterList(
             items(standaloneFiles, key = { it }) { file ->
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f)
                 ) {
                     ChapterRow(file, savedChapter == file, onSelect)
                 }
@@ -139,7 +188,7 @@ fun ChapterList(
                 Surface(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                     shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f),
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                 ) {
                     Column(modifier = Modifier.animateContentSize()) {
@@ -181,13 +230,14 @@ fun ChapterList(
         }
     }
 }
+}
 
 @Composable
 private fun ChapterRow(file: String, saved: Boolean, onSelect: (String) -> Unit) {
     Surface(
         onClick = { onSelect(file) },
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.82f)
     ) {
         Row(
             modifier = Modifier.heightIn(min = 56.dp).padding(18.dp),
