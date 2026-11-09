@@ -12,14 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.json.JSONObject
+import com.onticentity.orv_reader.ui.theme.Charter
 
 @Composable
-fun DisplayBlock(block: JSONObject, onSaveProgress: (String) -> Unit) {
+fun DisplayBlock(block: JSONObject, onSaveProgress: (String) -> Unit, inWindow: Boolean = false) {
     when (block.getString("type")) {
         "paragraph" -> {
             Text(
                 text = block.getString("text"),
                 style = MaterialTheme.typography.bodyLarge.copy(
+                    fontFamily = if (inWindow) MaterialTheme.typography.bodyLarge.fontFamily else Charter,
                     fontSize = 18.sp,
                     lineHeight = 29.sp,
                     letterSpacing = 0.sp
@@ -62,7 +64,7 @@ fun DisplayBlock(block: JSONObject, onSaveProgress: (String) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     for (index in 0 until children.length()) {
-                        DisplayBlock(children.getJSONObject(index), onSaveProgress)
+                        DisplayBlock(children.getJSONObject(index), onSaveProgress, inWindow = true)
                     }
                 }
             }
