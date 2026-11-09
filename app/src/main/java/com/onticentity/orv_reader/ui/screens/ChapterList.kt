@@ -1,36 +1,51 @@
 package com.onticentity.orv_reader.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.onticentity.orv_reader.ui.theme.ORVReaderTheme
 import com.onticentity.orv_reader.data.chapterFileOrder
+import com.onticentity.orv_reader.data.EpisodeGroup
 
 private fun chapterLabel(file: String): String =
     if (file == "prologue.json") "Prologue"
-    else "Chapitre ${file.removePrefix("ch_").removeSuffix(".json")}"
+    else "Chapter ${file.removePrefix("ch_").removeSuffix(".json")}"
 
 @Composable
 fun ChapterList(
     files: List<String>,
     onSelect: (String) -> Unit,
     savedChapter: String? = null,
-    onResume: () -> Unit = {}
+    onResume: () -> Unit = {},
+    episodes: List<EpisodeGroup> = emptyList()
 ) {
     val orderedFiles = remember(files) { files.sortedBy(::chapterFileOrder) }
+
+    val groupedFiles = remember(episodes) { episodes.flatMap { it.files }.toSet() }
+    val standaloneFiles = orderedFiles.filter { it !in groupedFiles }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -48,7 +63,7 @@ fun ChapterList(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text("ORV Reader", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
-                    Text("${files.size} chapters", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                    Text("${files.count { it != "prologue.json" }} chapters · ${episodes.count { it.kind == "episode" }} episodes", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                 }
             }
 
@@ -94,7 +109,7 @@ fun ChapterList(
 
             item(key = "chapters-title") {
                 Text(
-                    "Chapters",
+                    "Chapters and episodes",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -105,24 +120,85 @@ fun ChapterList(
                 item(key = "empty") { Text("No chapters found.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
 
-            items(orderedFiles, key = { it }) { file ->
+            items(standaloneFiles, key = { it }) { file ->
                 Surface(
-                    onClick = { onSelect(file) },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
-                    Row(
-                        modifier = Modifier.heightIn(min = 64.dp).padding(18.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    ChapterRow(file, savedChapter == file, onSelect)
+                }
+            }
 
-                        Text(chapterLabel(file), fontSize = 16.sp, modifier = Modifier.weight(1f))
-                        Text("\u203A", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 24.sp)
+            items(episodes, key = { "episode-${it.id}" }) { episode ->
+                // Null follows the saved chapter, including when progress loads asynchronously.
+                // A manual choice takes priority and survives scrolling and rotation.
+                var expansionOverride by rememberSaveable(episode.id) {
+                    mutableStateOf<Boolean?>(null)
+                }
+                val expanded = expansionOverride ?: (savedChapter in episode.files)
+                Surface(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                ) {
+                    Column(modifier = Modifier.animateContentSize()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .semantics { stateDescription = if (expanded) "Expanded" else "Collapsed" }
+                                .clickable(
+                                    role = Role.Button,
+                                    onClickLabel = if (expanded) "Collapse chapters" else "Expand chapters",
+                                    onClick = { expansionOverride = !expanded }
+                                )
+                                .padding(18.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Text(episode.label, color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                Text(episode.title, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+                                Text("${episode.files.size} chapters", fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Text(if (expanded) "−" else "+", fontSize = 24.sp,
+                                modifier = Modifier.padding(start = 16.dp),
+                                color = MaterialTheme.colorScheme.primary)
+                        }
+                        if (expanded) {
+                            episode.files.forEach { file ->
+                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                ChapterRow(file, savedChapter == file, onSelect)
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ChapterRow(file: String, saved: Boolean, onSelect: (String) -> Unit) {
+    Surface(
+        onClick = { onSelect(file) },
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Row(
+            modifier = Modifier.heightIn(min = 56.dp).padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(chapterLabel(file), fontSize = 16.sp)
+                if (saved) Text("CONTINUE READING", fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.primary)
+            }
+            Text("›", fontSize = 24.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -133,10 +209,14 @@ private fun ChapterListPreview() {
     ORVReaderTheme {
         ChapterList(
             files = listOf("prologue.json") +
-                    (1..550).map { "ch_$it.json" },
+                    (1..10).map { "ch_$it.json" },
             savedChapter = "ch_10.json",
             onSelect = {},
-            onResume = {}
+            onResume = {},
+            episodes = listOf(
+                EpisodeGroup("episode", 1, "Starting the Paid Service", (1..5).map { "ch_$it.json" }),
+                EpisodeGroup("episode", 2, "Protagonist", (6..10).map { "ch_$it.json" })
+            )
         )
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.onticentity.orv_reader.data.listChapterFiles
+import com.onticentity.orv_reader.data.loadEpisodeGroups
 import com.onticentity.orv_reader.ui.screens.ChapterList
 import com.onticentity.orv_reader.ui.screens.ChapterScreen
 import com.onticentity.orv_reader.data.ReadingProgress
@@ -22,6 +23,7 @@ fun ReaderApp() {
     val context = LocalContext.current
 
     val files = remember(context) { listChapterFiles(context) }
+    val episodes = remember(context, files) { loadEpisodeGroups(context, files) }
 
     var selectedChapter by rememberSaveable {
         mutableStateOf<String?>(null)
@@ -61,6 +63,7 @@ fun ReaderApp() {
     if (file == null) {
         ChapterList(
             files = files,
+            episodes = episodes,
             savedChapter = savedProgress?.chapterFile,
             onResume = {
                 savedProgress?.takeIf { it.chapterFile in files }?.let { progress ->
