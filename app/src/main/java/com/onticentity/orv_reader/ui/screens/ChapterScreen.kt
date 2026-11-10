@@ -8,7 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.ui.graphics.Color
+import com.onticentity.orv_reader.ui.theme.SoftReadingTheme
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -101,10 +101,11 @@ fun ChapterScreen(
         onBack = onBack
     )
 
+    SoftReadingTheme {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background,
-        contentColor = Color(0xFFE5E1DA)
+        contentColor = MaterialTheme.colorScheme.onBackground
     ) {
         Column(
             modifier = Modifier.fillMaxSize().displayCutoutPadding().navigationBarsPadding(),
@@ -194,4 +195,5 @@ fun ChapterScreen(
             }
         }
     }
+}
 }

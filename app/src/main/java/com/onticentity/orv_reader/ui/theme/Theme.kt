@@ -5,7 +5,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 
 private val ReaderColorScheme = darkColorScheme(
-    primary = ReaderText,
+    primary = ReaderAccent,
     onPrimary = ReaderBackground,
     secondary = ReaderSecondaryText,
     onSecondary = ReaderBackground,
@@ -17,7 +17,7 @@ private val ReaderColorScheme = darkColorScheme(
     onSurfaceVariant = ReaderSecondaryText,
     surfaceContainer = ReaderSurface,
     surfaceContainerLowest = ReaderHeader,
-    surfaceTint = ReaderText,
+    surfaceTint = ReaderAccent,
     outline = ReaderOutline,
     outlineVariant = ReaderSubtleOutline
 )

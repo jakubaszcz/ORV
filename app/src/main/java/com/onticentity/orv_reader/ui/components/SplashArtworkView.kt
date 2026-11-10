@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.*
 import android.view.View
 import com.onticentity.orv_reader.R
+import androidx.compose.ui.graphics.toArgb
+import com.onticentity.orv_reader.ui.theme.ReaderBackground
 import kotlin.math.sin
 
 /** A short, static-layout launch animation, matching the reader's charcoal palette. */
@@ -20,10 +22,10 @@ class SplashArtworkView(context: Context) : View(context) {
         super.onDraw(canvas)
         val cx = width / 2f
         val cy = height / 2f
-        canvas.drawColor(Color.rgb(10, 9, 8))
+        canvas.drawColor(ReaderBackground.toArgb())
         val glow = sin(progress * Math.PI).toFloat().coerceAtLeast(0f)
         paint.shader = RadialGradient(cx, cy, 230f * dp,
-            intArrayOf(Color.argb((65 + 35 * glow).toInt(), 52, 85, 96), Color.TRANSPARENT),
+            intArrayOf(Color.argb((65 + 35 * glow).toInt(), 75, 80, 76), Color.TRANSPARENT),
             null, Shader.TileMode.CLAMP)
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
         paint.shader = null
@@ -31,7 +33,7 @@ class SplashArtworkView(context: Context) : View(context) {
         // A few quiet lights rather than a busy loading indicator.
         val stars = arrayOf(-100f to -100f, 94f to -58f, -83f to 80f, 105f to 104f)
         stars.forEachIndexed { i, (x, y) ->
-            paint.color = Color.argb((35 + 65 * glow).toInt(), 162, 202, 212)
+            paint.color = Color.argb((35 + 65 * glow).toInt(), 187, 184, 174)
             val px = cx + x * dp
             val py = cy + (y - progress * (3 + i)) * dp
             canvas.drawCircle(px, py, (if (i % 2 == 0) 1f else .6f) * dp, paint)
