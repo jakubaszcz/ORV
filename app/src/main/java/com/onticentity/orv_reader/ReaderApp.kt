@@ -12,13 +12,17 @@ import com.onticentity.orv_reader.data.loadEpisodeGroups
 import com.onticentity.orv_reader.ui.screens.ChapterList
 import com.onticentity.orv_reader.ui.screens.ChapterScreen
 import com.onticentity.orv_reader.data.ReadingProgress
+import com.onticentity.orv_reader.data.ThemeMode
 import com.onticentity.orv_reader.data.loadChapter
 import com.onticentity.orv_reader.data.saveChapter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 @Composable
-fun ReaderApp() {
+fun ReaderApp(
+    themeMode: ThemeMode = ThemeMode.DARK,
+    onAppearance: () -> Unit = {}
+) {
 
     val context = LocalContext.current
 
@@ -76,7 +80,9 @@ fun ReaderApp() {
                 targetParagraphId = null
                 startAtEnd = false
                 selectedChapter = it
-            }
+            },
+            onAppearance = onAppearance,
+            themeMode = themeMode
         )
     } else {
 
@@ -122,7 +128,9 @@ fun ReaderApp() {
                         startAtEnd = true
                         selectedChapter = it
                     }
-                }
+                },
+                onAppearance = onAppearance,
+                themeMode = themeMode
             )
         }
     }

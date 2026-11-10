@@ -66,9 +66,7 @@ class MainActivity : ComponentActivity() {
         controller.hide(WindowInsetsCompat.Type.systemBars())
 
         setContent {
-            ORVReaderTheme {
-                ReaderApp()
-            }
+            ReaderRoot()
         }
     }
 }

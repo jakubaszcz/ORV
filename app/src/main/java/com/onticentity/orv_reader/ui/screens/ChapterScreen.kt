@@ -8,7 +8,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.HorizontalDivider
-import com.onticentity.orv_reader.ui.theme.SoftReadingTheme
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -24,14 +23,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.onticentity.orv_reader.data.ThemeMode
 import com.onticentity.orv_reader.data.readChapterBlocks
 import com.onticentity.orv_reader.ui.components.DisplayBlock
 import com.onticentity.orv_reader.ui.components.ReadingFooter
 import com.onticentity.orv_reader.ui.gestures.chapterGestures
+import com.onticentity.orv_reader.ui.theme.SoftReadingTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import com.onticentity.orv_reader.ui.components.AppearanceButton
 
 @Composable
 fun ChapterScreen(
@@ -44,7 +46,9 @@ fun ChapterScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
-    episodeLabel: String? = null
+    episodeLabel: String? = null,
+    onAppearance: () -> Unit = {},
+    themeMode: ThemeMode = ThemeMode.DARK,
 ) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
@@ -116,12 +120,24 @@ fun ChapterScreen(
                 color = MaterialTheme.colorScheme.background,
                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant
             ) {
-                Text(
-                    text = if (file == "prologue.json" || episodeLabel == null) chapterLabel
-                        else "$episodeLabel · $chapterLabel",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 26.dp, vertical = 12.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 26.dp, end = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (file == "prologue.json" || episodeLabel == null) {
+                            chapterLabel
+                        } else {
+                            "$episodeLabel · $chapterLabel"
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    AppearanceButton(mode = themeMode, onClick = onAppearance)
+                }
             }
     
             if (message.isNotEmpty()) {

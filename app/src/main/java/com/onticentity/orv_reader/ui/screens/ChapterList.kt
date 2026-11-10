@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.sp
 import com.onticentity.orv_reader.ui.theme.ORVReaderTheme
 import com.onticentity.orv_reader.data.chapterFileOrder
 import com.onticentity.orv_reader.data.EpisodeGroup
+import com.onticentity.orv_reader.data.ThemeMode
+import com.onticentity.orv_reader.ui.components.AppearanceButton
 
 private fun chapterLabel(file: String): String =
     if (file == "prologue.json") "Prologue"
@@ -52,7 +54,9 @@ fun ChapterList(
     onSelect: (String) -> Unit,
     savedChapter: String? = null,
     onResume: () -> Unit = {},
-    episodes: List<EpisodeGroup> = emptyList()
+    episodes: List<EpisodeGroup> = emptyList(),
+    onAppearance: () -> Unit = {},
+    themeMode: ThemeMode = ThemeMode.DARK,
 ) {
     val listState = rememberLazyListState()
     val background = MaterialTheme.colorScheme.background
@@ -70,7 +74,6 @@ fun ChapterList(
         contentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Box(Modifier.fillMaxSize()) {
-            // Anchored to the first list item: moves away at the same speed as the content.
             if (listState.firstVisibleItemIndex == 0) {
                 Box(Modifier.fillMaxWidth().height(480.dp).offset {
                     IntOffset(0, -listState.firstVisibleItemScrollOffset)
@@ -115,8 +118,20 @@ fun ChapterList(
                         fontFamily = FontFamily.Serif,
                         fontSize = 32.sp, lineHeight = 35.sp,
                         fontWeight = FontWeight.Medium)
-                    Text("${files.count { it != "prologue.json" }} chapters · ${episodes.count { it.kind == "episode" }} episodes", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
-                }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "${files.count { it != "prologue.json" }} chapters · " +
+                                    "${episodes.count { it.kind == "episode" }} episodes",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 14.sp,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        AppearanceButton(mode = themeMode, onClick = onAppearance)
+                    }                }
             }
 
             if (savedChapter != null && savedChapter in files) {
@@ -175,8 +190,6 @@ fun ChapterList(
             }
 
             items(episodes, key = { "episode-${it.id}" }) { episode ->
-                // Null follows the saved chapter, including when progress loads asynchronously.
-                // A manual choice takes priority and survives scrolling and rotation.
                 var expansionOverride by rememberSaveable(episode.id) {
                     mutableStateOf<Boolean?>(null)
                 }
